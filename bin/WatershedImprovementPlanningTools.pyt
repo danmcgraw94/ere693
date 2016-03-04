@@ -211,6 +211,71 @@ class ImpCov(object):
 
 			# Process: Stream to Feature
 			arcpy.gp.StreamToFeature_sa(Multiplied, DirDEM, Task3Stream, "SIMPLIFY")
+			
+			
+			#task4
+			# Local variables:
+			finalcalc = "finalcalc"
+			SQUAREMILES = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\SQUAREMILES"
+			F25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F25"
+			WeightedAccum = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\WeightedAccum"
+			RQ25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\RQ25"
+			F25Q25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F25Q25"
+			F100 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F100"
+			F100Q100 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F100Q100"
+			F50 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F50"
+			F50Q50 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F50Q50"
+			f2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\f2"
+			F2Q2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F2Q2"
+			F5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F5"
+			F5Q5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F5Q5"
+			F10 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F10"
+			F10Q10 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F10Q10"
+
+			# Process: Raster Calculator (14)
+			arcpy.gp.RasterCalculator_sa("\"%finalcalc%\"*0.0015625", SQUAREMILES)
+
+			# Process: Raster Calculator (4)
+			arcpy.gp.RasterCalculator_sa("467*(\"%SQUAREMILES%\"^ .655)", F25)
+
+			# Process: Raster Calculator (7)
+			arcpy.gp.RasterCalculator_sa("467*(\"%SQUAREMILES%\" ^ .655)", RQ25)
+
+			# Process: Raster Calculator (8)
+			arcpy.gp.RasterCalculator_sa("(28.5*(\"%SQUAREMILES%\"^.39))*(\"%WeightedAccum%\"^.436)*(\"%RQ25%\"^.338)", F25Q25)
+
+			# Process: Raster Calculator (6)
+			arcpy.gp.RasterCalculator_sa("719*(\"%SQUAREMILES%\" ^ .643)", F100)
+
+			# Process: Raster Calculator (9)
+			arcpy.gp.RasterCalculator_sa("(48*(\"%SQUAREMILES%\"^.392))*(\"%WeightedAccum%\"^.358)*(\"%F100%\"^.312)", F100Q100)
+
+			# Process: Raster Calculator (5)
+			arcpy.gp.RasterCalculator_sa("581*(\"%SQUAREMILES%\" ^ .65)", F50)
+
+			# Process: Raster Calculator (10)
+			arcpy.gp.RasterCalculator_sa("(37.4*(\"%SQUAREMILES%\"^.391))*(\"%WeightedAccum%\"^.396)*(\"%F50%\"^.325)", F50Q50)
+
+			# Process: Raster Calculator
+			arcpy.gp.RasterCalculator_sa("144*(\"%SQUAREMILES%\" ^ .691)", f2)
+
+			# Process: Raster Calculator (11)
+			arcpy.gp.RasterCalculator_sa("(7.87*(\"%SQUAREMILES%\"^.539))*(\"%WeightedAccum%\"^.686)*(\"%F2%\"^.29)", F2Q2)
+
+			# Process: Raster Calculator (2)
+			arcpy.gp.RasterCalculator_sa("248*(\"%SQUAREMILES%\" ^ .67)", F5)
+
+			# Process: Raster Calculator (12)
+			arcpy.gp.RasterCalculator_sa("(16.3*(\"%SQUAREMILES%\"^.39))*(\"%WeightedAccum%\"^.489)*(\"%F5%\"^.286)", F5Q5)
+
+			# Process: Raster Calculator (3)
+			arcpy.gp.RasterCalculator_sa("334*(\"%SQUAREMILES%\" ^ .665)", F10)
+
+			# Process: Raster Calculator (13)
+			arcpy.gp.RasterCalculator_sa("(22.7*(\"%SQUAREMILES%\"^.436))*(\"%WeightedAccum%\"^.515)*(\"%F10%\"^.289)", F10Q10)
+
+
+
 
 
 
