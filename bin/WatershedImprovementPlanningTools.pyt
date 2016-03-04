@@ -65,6 +65,56 @@ class TopoHydro(object):
     def execute(self, parameters, messages):
         try:
             log("Parameters are %s, %s, %s" % (parameters[0].valueAsText, parameters[1].valueAsText, parameters[2].valueAsText))
+			import arcpy
+
+
+			# Local variables:
+			DEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\DEM"
+			FilledDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\FilledDEM"
+			AnalysisMask = "AnalysisMask"
+			MaskRas = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\MaskRas"
+			Output_drop_raster = ""
+			DirDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\DirDEM"
+			AccumDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\AccumDEM"
+			MultipliedDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\MultipliedDEM"
+			finalcalc = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\finalcalc"
+			ReclassDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\ReclassDEM"
+			Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Stream"
+
+			# Set Geoprocessing environments
+			arcpy.env.snapRaster = "DEM"
+
+			# Process: Fill
+			arcpy.gp.Fill_sa(DEM, FilledDEM, "")
+
+			# Process: Polygon to Raster
+			arcpy.PolygonToRaster_conversion(AnalysisMask, "OBJECTID", MaskRas, "CELL_CENTER", "NONE", "40")
+
+			# Process: Flow Direction
+			tempEnvironment0 = arcpy.env.cellSize
+			arcpy.env.cellSize = "MAXOF"
+			tempEnvironment1 = arcpy.env.mask
+			arcpy.env.mask = MaskRas
+			arcpy.gp.FlowDirection_sa(FilledDEM, DirDEM, "NORMAL", Output_drop_raster)
+			arcpy.env.cellSize = tempEnvironment0
+			arcpy.env.mask = tempEnvironment1
+
+			# Process: Flow Accumulation
+			arcpy.gp.FlowAccumulation_sa(DirDEM, AccumDEM, "", "FLOAT")
+
+			# Process: Raster Calculator
+			arcpy.gp.RasterCalculator_sa("Float(\"%AccumDEM%\")*(40*40)", MultipliedDEM)
+
+			# Process: Raster Calculator (2)
+			arcpy.gp.RasterCalculator_sa("\"%MultipliedDEM%\" / 43560", finalcalc)
+
+			# Process: Reclassify
+			arcpy.gp.Reclassify_sa(finalcalc, "Value", "0 883 NODATA;883 22532.3046875 1", ReclassDEM, "DATA")
+
+			# Process: Stream to Feature
+			arcpy.gp.StreamToFeature_sa(ReclassDEM, DirDEM, Stream, "SIMPLIFY")
+
+
         except Exception as err:
             log(traceback.format_exc())
             log(err)
