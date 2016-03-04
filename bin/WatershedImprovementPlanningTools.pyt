@@ -165,7 +165,56 @@ class ImpCov(object):
     def execute(self, parameters, messages):
         try:
             log("Parameters are %s, %s" % (parameters[0].valueAsText, parameters[1].valueAsText))
-        except Exception as err:
+        
+			# Import arcpy module
+			import arcpy
+
+
+			# Local variables:
+			ReclassDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\ReclassDEM"
+			DirDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\DirDEM"
+			Impervious = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Impervious"
+			ImpervCalc = Impervious
+			ImperviousRAS = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\ImperviousRAS"
+			BlockStats = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\BlockStats"
+			AggregateImperv = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\AggregateImperv"
+			WeightedAccum = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\WeightedAccum"
+			AccumDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\AccumDEM"
+			Divide__2_ = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Divide"
+			ReclassDivide = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\ReclassDivide"
+			Multiplied = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Multiplied"
+			Task3Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Task3Stream"
+
+			# Process: Calculate Field
+			arcpy.CalculateField_management(Impervious, "LENGTH", "1", "VB", "")
+
+			# Process: Feature to Raster
+			arcpy.FeatureToRaster_conversion(ImpervCalc, "LENGTH", ImperviousRAS, "4")
+
+			# Process: Block Statistics
+			arcpy.gp.BlockStatistics_sa(ImperviousRAS, BlockStats, "Rectangle 10 10 CELL", "SUM", "DATA")
+
+			# Process: Aggregate
+			arcpy.gp.Aggregate_sa(BlockStats, AggregateImperv, "10", "MEAN", "EXPAND", "DATA")
+
+			# Process: Flow Accumulation
+			arcpy.gp.FlowAccumulation_sa(DirDEM, WeightedAccum, AggregateImperv, "FLOAT")
+
+			# Process: Divide
+			arcpy.gp.Divide_sa(WeightedAccum, AccumDEM, Divide__2_)
+
+			# Process: Reclassify
+			arcpy.gp.Reclassify_sa(Divide__2_, "Value", "0 10 1;10 20 2;20 30 3;30 40 4;40 50 5;50 60 6;60 70 7;70 80 8;80 90 9;90 100 10", ReclassDivide, "DATA")
+
+			# Process: Raster Calculator
+			arcpy.gp.RasterCalculator_sa("(\"%ReclassDEM%\")*(\"%ReclassDivide%\")", Multiplied)
+
+			# Process: Stream to Feature
+			arcpy.gp.StreamToFeature_sa(Multiplied, DirDEM, Task3Stream, "SIMPLIFY")
+
+
+
+		except Exception as err:
             log(traceback.format_exc())
             log(err)
             raise err
