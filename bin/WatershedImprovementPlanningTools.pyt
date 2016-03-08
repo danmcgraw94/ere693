@@ -65,9 +65,7 @@ class TopoHydro(object):
     def execute(self, parameters, messages):
         try:
             log("Parameters are %s, %s, %s" % (parameters[0].valueAsText, parameters[1].valueAsText, parameters[2].valueAsText))
-			import arcpy
-
-
+			
 			# Local variables:
 			DEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\DEM"
 			FilledDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\FilledDEM"
@@ -85,34 +83,34 @@ class TopoHydro(object):
 			arcpy.env.snapRaster = "DEM"
 
 			# Process: Fill
-			arcpy.gp.Fill_sa(DEM, FilledDEM, "")
+			FilledDEM = arcpy.gp.Fill_sa(DEM, "")
 
 			# Process: Polygon to Raster
-			arcpy.PolygonToRaster_conversion(AnalysisMask, "OBJECTID", MaskRas, "CELL_CENTER", "NONE", "40")
+			MaskRas = arcpy.PolygonToRaster_conversion(AnalysisMask, "OBJECTID", "CELL_CENTER", "NONE", "40")
 
 			# Process: Flow Direction
 			tempEnvironment0 = arcpy.env.cellSize
 			arcpy.env.cellSize = "MAXOF"
 			tempEnvironment1 = arcpy.env.mask
 			arcpy.env.mask = MaskRas
-			arcpy.gp.FlowDirection_sa(FilledDEM, DirDEM, "NORMAL", Output_drop_raster)
+			DirDEM = arcpy.gp.FlowDirection_sa(FilledDEM, "NORMAL", Output_drop_raster)
 			arcpy.env.cellSize = tempEnvironment0
 			arcpy.env.mask = tempEnvironment1
 
 			# Process: Flow Accumulation
-			arcpy.gp.FlowAccumulation_sa(DirDEM, AccumDEM, "", "FLOAT")
+			AccumDEM = arcpy.gp.FlowAccumulation_sa(DirDEM, "", "FLOAT")
 
 			# Process: Raster Calculator
-			arcpy.gp.RasterCalculator_sa("Float(\"%AccumDEM%\")*(40*40)", MultipliedDEM)
+			MultipliedDEM = arcpy.gp.RasterCalculator_sa("Float(\"%AccumDEM%\")*(40*40)")
 
 			# Process: Raster Calculator (2)
-			arcpy.gp.RasterCalculator_sa("\"%MultipliedDEM%\" / 43560", finalcalc)
+			finalcalc = arcpy.gp.RasterCalculator_sa("\"%MultipliedDEM%\" / 43560")
 
 			# Process: Reclassify
-			arcpy.gp.Reclassify_sa(finalcalc, "Value", "0 883 NODATA;883 22532.3046875 1", ReclassDEM, "DATA")
+			ReclassDEM = arcpy.gp.Reclassify_sa(finalcalc, "Value", "0 883 NODATA;883 22532.3046875 1", "DATA")
 
 			# Process: Stream to Feature
-			arcpy.gp.StreamToFeature_sa(ReclassDEM, DirDEM, Stream, "SIMPLIFY")
+			Stream = arcpy.gp.StreamToFeature_sa(ReclassDEM, DirDEM, "SIMPLIFY")
 
 
         except Exception as err:
@@ -166,9 +164,6 @@ class ImpCov(object):
         try:
             log("Parameters are %s, %s" % (parameters[0].valueAsText, parameters[1].valueAsText))
         
-			# Import arcpy module
-			import arcpy
-
 
 			# Local variables:
 			ReclassDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\ReclassDEM"
@@ -186,93 +181,149 @@ class ImpCov(object):
 			Task3Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Task3Stream"
 
 			# Process: Calculate Field
-			arcpy.CalculateField_management(Impervious, "LENGTH", "1", "VB", "")
+			ImpervCalc = arcpy.CalculateField_management(Impervious, "LENGTH", "1", "VB", "")
+
 
 			# Process: Feature to Raster
-			arcpy.FeatureToRaster_conversion(ImpervCalc, "LENGTH", ImperviousRAS, "4")
+			ImperviousRAS = arcpy.FeatureToRaster_conversion(ImpervCalc, "LENGTH", "4")
 
 			# Process: Block Statistics
-			arcpy.gp.BlockStatistics_sa(ImperviousRAS, BlockStats, "Rectangle 10 10 CELL", "SUM", "DATA")
+			BlockStats = arcpy.gp.BlockStatistics_sa(ImperviousRAS, "Rectangle 10 10 CELL", "SUM", "DATA")
 
 			# Process: Aggregate
-			arcpy.gp.Aggregate_sa(BlockStats, AggregateImperv, "10", "MEAN", "EXPAND", "DATA")
+			AggregateImperv = arcpy.gp.Aggregate_sa(BlockStats, "10", "MEAN", "EXPAND", "DATA")
 
 			# Process: Flow Accumulation
-			arcpy.gp.FlowAccumulation_sa(DirDEM, WeightedAccum, AggregateImperv, "FLOAT")
+			WeightedAccum = arcpy.gp.FlowAccumulation_sa(DirDEM, AggregateImperv, "FLOAT")
 
 			# Process: Divide
-			arcpy.gp.Divide_sa(WeightedAccum, AccumDEM, Divide__2_)
+			Divide__2_ = arcpy.gp.Divide_sa(WeightedAccum, AccumDEM)
 
 			# Process: Reclassify
-			arcpy.gp.Reclassify_sa(Divide__2_, "Value", "0 10 1;10 20 2;20 30 3;30 40 4;40 50 5;50 60 6;60 70 7;70 80 8;80 90 9;90 100 10", ReclassDivide, "DATA")
+			ReclassDivide = arcpy.gp.Reclassify_sa(Divide__2_, "Value", "0 10 1;10 20 2;20 30 3;30 40 4;40 50 5;50 60 6;60 70 7;70 80 8;80 90 9;90 100 10", "DATA")
 
 			# Process: Raster Calculator
-			arcpy.gp.RasterCalculator_sa("(\"%ReclassDEM%\")*(\"%ReclassDivide%\")", Multiplied)
+			Multiplied = arcpy.gp.RasterCalculator_sa("(\"%ReclassDEM%\")*(\"%ReclassDivide%\")")
 
 			# Process: Stream to Feature
-			arcpy.gp.StreamToFeature_sa(Multiplied, DirDEM, Task3Stream, "SIMPLIFY")
+			Task3Stream = arcpy.gp.StreamToFeature_sa(Multiplied, DirDEM, "SIMPLIFY")
+
+
+
+
 			
 			
 			#task4
 			# Local variables:
 			finalcalc = "finalcalc"
 			SQUAREMILES = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\SQUAREMILES"
-			F25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F25"
-			WeightedAccum = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\WeightedAccum"
-			RQ25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\RQ25"
-			F25Q25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F25Q25"
+			DivideFloat = "DivideFloat"
+			IA = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\IA"
 			F100 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F100"
 			F100Q100 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F100Q100"
+			Q100 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q100"
+			DirDEM = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\DirDEM"
+			Q100Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q100Stream"
 			F50 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F50"
 			F50Q50 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F50Q50"
-			f2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\f2"
-			F2Q2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F2Q2"
-			F5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F5"
-			F5Q5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F5Q5"
+			Q50 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q50"
+			Q50Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q50Stream"
+			F25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F25"
+			F25Q25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F25Q25"
+			Q25 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q25"
+			Q25Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q25Stream"
 			F10 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F10"
 			F10Q10 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F10Q10"
+			Q10 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q10"
+			Q10Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q10Stream"
+			F5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F5"
+			F5Q5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F5Q5"
+			Q5 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q5"
+			Q5Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q5Stream"
+			f2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\f2"
+			F2Q2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\F2Q2"
+			Q2 = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q2"
+			Q2Stream = "E:\\Storage\\GIS-Based Modeling\\Lab06Data.gdb\\Q2Stream"
+			Output_raster = ""
 
 			# Process: Raster Calculator (14)
-			arcpy.gp.RasterCalculator_sa("\"%finalcalc%\"*0.0015625", SQUAREMILES)
-
-			# Process: Raster Calculator (4)
-			arcpy.gp.RasterCalculator_sa("467*(\"%SQUAREMILES%\"^ .655)", F25)
+			SQUAREMILES = arcpy.gp.RasterCalculator_sa("\"%finalcalc%\"*0.0015625")
 
 			# Process: Raster Calculator (7)
-			arcpy.gp.RasterCalculator_sa("467*(\"%SQUAREMILES%\" ^ .655)", RQ25)
-
-			# Process: Raster Calculator (8)
-			arcpy.gp.RasterCalculator_sa("(28.5*(\"%SQUAREMILES%\"^.39))*(\"%WeightedAccum%\"^.436)*(\"%RQ25%\"^.338)", F25Q25)
+			IA = arcpy.gp.RasterCalculator_sa("Float((\"%DivideFloat%\")/100)")
 
 			# Process: Raster Calculator (6)
-			arcpy.gp.RasterCalculator_sa("719*(\"%SQUAREMILES%\" ^ .643)", F100)
+			F100 = arcpy.gp.RasterCalculator_sa("719*((\"%SQUAREMILES%\") **.643)")
 
 			# Process: Raster Calculator (9)
-			arcpy.gp.RasterCalculator_sa("(48*(\"%SQUAREMILES%\"^.392))*(\"%WeightedAccum%\"^.358)*(\"%F100%\"^.312)", F100Q100)
+			F100Q100 = arcpy.gp.RasterCalculator_sa("(48*((\"%SQUAREMILES%\")**.392))*((\"%IA%\")**.358)*((\"%F100%\")**.312)")
+
+			# Process: Reclassify (5)
+			Q100 = arcpy.gp.Reclassify_sa(F100Q100, "Value", "0 40 NODATA;40 1686.8005523523098 1", "DATA")
+
+			# Process: Stream to Feature
+			Q100Stream = arcpy.gp.StreamToFeature_sa(Q100, DirDEM, "SIMPLIFY")
 
 			# Process: Raster Calculator (5)
-			arcpy.gp.RasterCalculator_sa("581*(\"%SQUAREMILES%\" ^ .65)", F50)
+			F50 = arcpy.gp.RasterCalculator_sa("581*((\"%SQUAREMILES%\")**.65)")
 
 			# Process: Raster Calculator (10)
-			arcpy.gp.RasterCalculator_sa("(37.4*(\"%SQUAREMILES%\"^.391))*(\"%WeightedAccum%\"^.396)*(\"%F50%\"^.325)", F50Q50)
+			F50Q50 = arcpy.gp.RasterCalculator_sa("(37.4*((\"%SQUAREMILES%\")**.391))*((\"%IA%\")**.396)*((\"%F50%\")**.325)")
 
-			# Process: Raster Calculator
-			arcpy.gp.RasterCalculator_sa("144*(\"%SQUAREMILES%\" ^ .691)", f2)
+			# Process: Reclassify (6)
+			Q50 = arcpy.gp.Reclassify_sa(F50Q50, "Value", "0 40 NODATA;40 1296.6974764473775 1", "DATA")
 
-			# Process: Raster Calculator (11)
-			arcpy.gp.RasterCalculator_sa("(7.87*(\"%SQUAREMILES%\"^.539))*(\"%WeightedAccum%\"^.686)*(\"%F2%\"^.29)", F2Q2)
+			# Process: Stream to Feature (2)
+			Q50Stream = arcpy.gp.StreamToFeature_sa(Q50, DirDEM, "SIMPLIFY")
 
-			# Process: Raster Calculator (2)
-			arcpy.gp.RasterCalculator_sa("248*(\"%SQUAREMILES%\" ^ .67)", F5)
+			# Process: Raster Calculator (4)
+			F25 = arcpy.gp.RasterCalculator_sa("467*((\"%SQUAREMILES%\")**.655)")
 
-			# Process: Raster Calculator (12)
-			arcpy.gp.RasterCalculator_sa("(16.3*(\"%SQUAREMILES%\"^.39))*(\"%WeightedAccum%\"^.489)*(\"%F5%\"^.286)", F5Q5)
+			# Process: Raster Calculator (8)
+			F25Q25 = arcpy.gp.RasterCalculator_sa("(28.5*((\"%SQUAREMILES%\")**.39))*((\"%IA%\")**.436)*((\"%F25%\")**.338)")
+
+			# Process: Reclassify (4)
+			Q25 = arcpy.gp.Reclassify_sa(F25Q25, "Value", "0 40 NODATA;40 962.81450417328051 1", "DATA")
+
+			# Process: Stream to Feature (3)
+			Q25Stream = arcpy.gp.StreamToFeature_sa(Q25, DirDEM, "SIMPLIFY")
 
 			# Process: Raster Calculator (3)
-			arcpy.gp.RasterCalculator_sa("334*(\"%SQUAREMILES%\" ^ .665)", F10)
+			F10 = arcpy.gp.RasterCalculator_sa("334*((\"%SQUAREMILES%\")** .665)")
 
 			# Process: Raster Calculator (13)
-			arcpy.gp.RasterCalculator_sa("(22.7*(\"%SQUAREMILES%\"^.436))*(\"%WeightedAccum%\"^.515)*(\"%F10%\"^.289)", F10Q10)
+			F10Q10 = arcpy.gp.RasterCalculator_sa("(22.7*((\"%SQUAREMILES%\")**.436))*((\"%IA%\")**.515)*((\"%F10%\")**.289)")
+
+			# Process: Reclassify (2)
+			Q10 = arcpy.gp.Reclassify_sa(F10Q10, "Value", "0 40 NODATA;40 478.64123930725066 1", "DATA")
+
+			# Process: Stream to Feature (4)
+			Q10Stream = arcpy.gp.StreamToFeature_sa(Q10, DirDEM, "SIMPLIFY")
+
+			# Process: Raster Calculator (2)
+			F5 = arcpy.gp.RasterCalculator_sa("248*((\"%SQUAREMILES%\") ** .67)")
+
+			# Process: Raster Calculator (12)
+			F5Q5 = arcpy.gp.RasterCalculator_sa("(16.3*((\"%SQUAREMILES%\")**.489))*((\"%IA%\")**.572)*((\"%F5%\")**.286)")
+
+			# Process: Reclassify (3)
+			Q5 = arcpy.gp.Reclassify_sa(F5Q5, "Value", "0 40 NODATA;40 339.62484033724843 1", "DATA")
+
+			# Process: Stream to Feature (5)
+			Q5Stream = arcpy.gp.StreamToFeature_sa(Q5, DirDEM, "SIMPLIFY")
+
+			# Process: Raster Calculator
+			f2 = arcpy.gp.RasterCalculator_sa("144*((\"%SQUAREMILES%\")** .691)")
+
+			# Process: Raster Calculator (11)
+			F2Q2 = arcpy.gp.RasterCalculator_sa("(7.87*((\"%SQUAREMILES%\")**.539))*((\"%IA%\")**.686)*((\"%f2%\")**.29)")
+
+			# Process: Reclassify (8)
+			Q2 = arcpy.gp.Reclassify_sa(F2Q2, "Value", "0 40 NODATA;40 145.66437272620374 1", "DATA")
+
+			# Process: Stream to Feature (6)
+			Q2Stream = arcpy.gp.StreamToFeature_sa(Q2, DirDEM, "SIMPLIFY")
+
 
 
 
